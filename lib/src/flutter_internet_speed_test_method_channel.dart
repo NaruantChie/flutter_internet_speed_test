@@ -18,10 +18,12 @@ class MethodChannelFlutterInternetSpeedTest
   final _logger = Logger();
 
   Future<void> _methodCallHandler(MethodCall call) async {
+    // Log arguments and callbacks for debugging
     if (isLogEnabled) {
-      _logger.d('arguments are ${call.arguments}');
-//    _logger.d('arguments type is  ${call.arguments['type']}');
-      _logger.d('callbacks are $callbacksById');
+      _logger.d('Received method call: ${call.method}');
+      _logger.d('Arguments: ${call.arguments}');
+      _logger.d('Current callbacks: $callbacksById');
+      _logger.d('Timestamp: ${DateTime.now()}');
     }
     switch (call.method) {
       case 'callListener':
@@ -31,22 +33,22 @@ class MethodChannelFlutterInternetSpeedTest
             downloadSteps++;
             downloadRate +=
                 int.parse((call.arguments['transferRate'] ~/ 1000).toString());
-            if (isLogEnabled) {
-              _logger.d('download steps is $downloadSteps}');
-              _logger.d('download steps is $downloadRate}');
-            }
             double average = (downloadRate ~/ downloadSteps).toDouble();
-            SpeedUnit unit = SpeedUnit.kbps;
+            // Convert to Mbps
             average /= 1000;
-            unit = SpeedUnit.mbps;
+            SpeedUnit unit = SpeedUnit.mbps;
+            if (isLogEnabled) {
+              _logger.d(
+                  "Download COMPLETE: Raw transferRate: ${call.arguments['transferRate']} | Steps: $downloadSteps | Computed Average: $average $unit");
+            }
             callbacksById[call.arguments["id"]]!.item3(average, unit);
             downloadSteps = 0;
             downloadRate = 0;
             callbacksById.remove(call.arguments["id"]);
           } else if (call.arguments['type'] == ListenerEnum.error.index) {
             if (isLogEnabled) {
-              _logger.d('onError : ${call.arguments["speedTestError"]}');
-              _logger.d('onError : ${call.arguments["errorMessage"]}');
+              _logger.d(
+                  "Download ERROR: ${call.arguments['errorMessage']} | ${call.arguments['speedTestError']}");
             }
             callbacksById[call.arguments["id"]]!.item1(
                 call.arguments['errorMessage'],
@@ -55,20 +57,22 @@ class MethodChannelFlutterInternetSpeedTest
             downloadRate = 0;
             callbacksById.remove(call.arguments["id"]);
           } else if (call.arguments['type'] == ListenerEnum.progress.index) {
-            double rate = (call.arguments['transferRate'] ~/ 1000).toDouble();
+            double rawRate =
+                (call.arguments['transferRate'] ~/ 1000).toDouble();
+            if (rawRate != 0) downloadSteps++;
+            downloadRate += rawRate.toInt();
+            double convertedRate = rawRate / 1000; // in Mbps
+            SpeedUnit unit = SpeedUnit.mbps;
+            double percent = call.arguments['percent'].toDouble();
             if (isLogEnabled) {
-              _logger.d('rate is $rate');
+              _logger.d(
+                  "Download PROGRESS: $percent% | Raw Rate: $rawRate, Converted Rate: $convertedRate $unit");
             }
-            if (rate != 0) downloadSteps++;
-            downloadRate += rate.toInt();
-            SpeedUnit unit = SpeedUnit.kbps;
-            rate /= 1000;
-            unit = SpeedUnit.mbps;
             callbacksById[call.arguments["id"]]!
-                .item2(call.arguments['percent'].toDouble(), rate, unit);
+                .item2(percent, convertedRate, unit);
           } else if (call.arguments['type'] == ListenerEnum.cancel.index) {
             if (isLogEnabled) {
-              _logger.d('onCancel : ${call.arguments["id"]}');
+              _logger.d("Download CANCELLED for id: ${call.arguments['id']}");
             }
             callbacksById[call.arguments["id"]]!.item4();
             downloadSteps = 0;
@@ -78,64 +82,61 @@ class MethodChannelFlutterInternetSpeedTest
         } else if (call.arguments["id"] as int ==
             CallbacksEnum.startUploadTesting.index) {
           if (call.arguments['type'] == ListenerEnum.complete.index) {
-            if (isLogEnabled) {
-              _logger.d('onComplete : ${call.arguments['transferRate']}');
-            }
-
             uploadSteps++;
             uploadRate +=
                 int.parse((call.arguments['transferRate'] ~/ 1000).toString());
-            if (isLogEnabled) {
-              _logger.d('download steps is $uploadSteps}');
-              _logger.d('download steps is $uploadRate}');
-            }
             double average = (uploadRate ~/ uploadSteps).toDouble();
-            SpeedUnit unit = SpeedUnit.kbps;
             average /= 1000;
-            unit = SpeedUnit.mbps;
+            SpeedUnit unit = SpeedUnit.mbps;
+            if (isLogEnabled) {
+              _logger.d(
+                  "Upload COMPLETE: Raw transferRate: ${call.arguments['transferRate']} | Steps: $uploadSteps | Computed Average: $average $unit");
+            }
             callbacksById[call.arguments["id"]]!.item3(average, unit);
             uploadSteps = 0;
             uploadRate = 0;
             callbacksById.remove(call.arguments["id"]);
           } else if (call.arguments['type'] == ListenerEnum.error.index) {
             if (isLogEnabled) {
-              _logger.d('onError : ${call.arguments["speedTestError"]}');
-              _logger.d('onError : ${call.arguments["errorMessage"]}');
+              _logger.d(
+                  "Upload ERROR: ${call.arguments['errorMessage']} | ${call.arguments['speedTestError']}");
             }
             callbacksById[call.arguments["id"]]!.item1(
                 call.arguments['errorMessage'],
                 call.arguments['speedTestError']);
           } else if (call.arguments['type'] == ListenerEnum.progress.index) {
-            double rate = (call.arguments['transferRate'] ~/ 1000).toDouble();
+            double rawRate =
+                (call.arguments['transferRate'] ~/ 1000).toDouble();
+            if (rawRate != 0) uploadSteps++;
+            uploadRate += rawRate.toInt();
+            double convertedRate = rawRate / 1000.0; // in Mbps
+            SpeedUnit unit = SpeedUnit.mbps;
+            double percent = call.arguments['percent'].toDouble();
             if (isLogEnabled) {
-              _logger.d('rate is $rate');
+              _logger.d(
+                  "Upload PROGRESS: $percent% | Raw Rate: $rawRate, Converted Rate: $convertedRate $unit");
             }
-            if (rate != 0) uploadSteps++;
-            uploadRate += rate.toInt();
-            SpeedUnit unit = SpeedUnit.kbps;
-            rate /= 1000.0;
-            unit = SpeedUnit.mbps;
             callbacksById[call.arguments["id"]]!
-                .item2(call.arguments['percent'].toDouble(), rate, unit);
+                .item2(percent, convertedRate, unit);
           } else if (call.arguments['type'] == ListenerEnum.cancel.index) {
             if (isLogEnabled) {
-              _logger.d('onCancel : ${call.arguments["id"]}');
+              _logger.d("Upload CANCELLED for id: ${call.arguments['id']}");
             }
             callbacksById[call.arguments["id"]]!.item4();
-            downloadSteps = 0;
-            downloadRate = 0;
+            uploadSteps = 0;
+            uploadRate = 0;
             callbacksById.remove(call.arguments["id"]);
           }
         }
-//        callbacksById[call.arguments["id"]](call.arguments["args"]);
         break;
       default:
         if (isLogEnabled) {
           _logger.d(
-              'TestFairy: Ignoring invoke from native. This normally shouldn\'t happen.');
+              'Ignoring unknown method call: ${call.method} with arguments ${call.arguments}');
         }
     }
 
+    // ส่งคำสั่งยกเลิกการฟัง (cancel listening) หลังจากประมวลผลเสร็จ
     _channel.invokeMethod("cancelListening", call.arguments["id"]);
   }
 
@@ -149,7 +150,8 @@ class MethodChannelFlutterInternetSpeedTest
     _channel.setMethodCallHandler(_methodCallHandler);
     int currentListenerId = callbacksEnum.index;
     if (isLogEnabled) {
-      _logger.d('test $currentListenerId');
+      _logger.d(
+          'Starting listening with id: $currentListenerId at ${DateTime.now()}');
     }
     callbacksById[currentListenerId] = callback;
     await _channel.invokeMethod(
@@ -164,6 +166,10 @@ class MethodChannelFlutterInternetSpeedTest
     return () {
       _channel.invokeMethod("cancelListening", currentListenerId);
       callbacksById.remove(currentListenerId);
+      if (isLogEnabled) {
+        _logger.d(
+            'Cancelled listening for id: $currentListenerId at ${DateTime.now()}');
+      }
     };
   }
 
@@ -184,6 +190,10 @@ class MethodChannelFlutterInternetSpeedTest
       required CancelCallback onCancel,
       required fileSize,
       required String testServer}) async {
+    if (isLogEnabled) {
+      _logger.d(
+          "Starting download test on server: $testServer with fileSize: $fileSize");
+    }
     return await _startListening(Tuple4(onError, onProgress, onDone, onCancel),
         CallbacksEnum.startDownLoadTesting, testServer,
         fileSize: fileSize);
@@ -197,6 +207,10 @@ class MethodChannelFlutterInternetSpeedTest
       required CancelCallback onCancel,
       required int fileSize,
       required String testServer}) async {
+    if (isLogEnabled) {
+      _logger.d(
+          "Starting upload test on server: $testServer with fileSize: $fileSize");
+    }
     return await _startListening(Tuple4(onError, onProgress, onDone, onCancel),
         CallbacksEnum.startUploadTesting, testServer,
         fileSize: fileSize);
@@ -224,13 +238,17 @@ class MethodChannelFlutterInternetSpeedTest
           var serverSelectionResponse = ServerSelectionResponse.fromJson(
               json.decode(serverResponse.body));
           if (serverSelectionResponse.targets?.isNotEmpty == true) {
+            if (isLogEnabled) {
+              _logger.d(
+                  "Default server found: ${serverSelectionResponse.targets!.first.url}");
+            }
             return serverSelectionResponse;
           }
         }
       }
     } catch (e) {
       if (logEnabled) {
-        _logger.d(e);
+        _logger.d("Error in getDefaultServer: $e");
       }
     }
     return null;
@@ -244,8 +262,14 @@ class MethodChannelFlutterInternetSpeedTest
         'id1': CallbacksEnum.startDownLoadTesting.index,
         'id2': CallbacksEnum.startUploadTesting.index,
       });
+      if (isLogEnabled) {
+        _logger.d("Test cancelled, result: $result");
+      }
     } on PlatformException {
       result = false;
+      if (isLogEnabled) {
+        _logger.d("PlatformException while cancelling test");
+      }
     }
     return result;
   }

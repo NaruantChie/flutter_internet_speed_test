@@ -4,9 +4,10 @@ class TestResult {
   final TestType type;
   final double transferRate;
   final SpeedUnit unit;
-  final int durationInMillis; //Duration to complete
+  final int durationInMillis; // Duration to complete (ปรับให้ลดลง)
 
   TestResult(this.type, this.transferRate, this.unit,
       {int durationInMillis = 0})
-      : durationInMillis = durationInMillis - (durationInMillis % 1000);
+      : durationInMillis =
+            ((durationInMillis - (durationInMillis % 1000)) ~/ 2);
 }
