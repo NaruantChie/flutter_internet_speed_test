@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_internet_speed_test/src/speed_test_utils.dart';
 import 'package:flutter_internet_speed_test/src/test_result.dart';
 
@@ -15,7 +17,7 @@ class FlutterInternetSpeedTest {
   static const _defaultDownloadTestServer =
       'http://speedtest.ftp.otenet.gr/files/test10Mb.db';
   static const _defaultUploadTestServer = 'http://speedtest.ftp.otenet.gr/';
-  static const _defaultFileSize = 10 * 1024 * 1024; //10 MB
+  static const _defaultFileSize = 10 * 1024 * 1024; // 10 MB
 
   static final FlutterInternetSpeedTest _instance =
       FlutterInternetSpeedTest._private();
@@ -29,6 +31,7 @@ class FlutterInternetSpeedTest {
 
   bool isTestInProgress() => _isTestInProgress;
 
+  /// ฟังก์ชัน startTesting ใช้งานทั่วไป (ใช้สำหรับทั้ง Android และ iOS)
   Future<void> startTesting({
     required ResultCallback onCompleted,
     DefaultCallback? onStarted,
@@ -97,8 +100,12 @@ class FlutterInternetSpeedTest {
       onDone: (double transferRate, SpeedUnit unit) {
         final downloadDuration =
             DateTime.now().millisecondsSinceEpoch - startDownloadTimeStamp;
-        final downloadResult = TestResult(TestType.download, transferRate, unit,
-            durationInMillis: downloadDuration);
+        final downloadResult = TestResult(
+          TestType.download,
+          transferRate,
+          unit,
+          durationInMillis: downloadDuration,
+        );
 
         if (onProgress != null) onProgress(100, downloadResult);
         if (onDownloadComplete != null) onDownloadComplete(downloadResult);
@@ -108,8 +115,12 @@ class FlutterInternetSpeedTest {
           onDone: (double transferRate, SpeedUnit unit) {
             final uploadDuration =
                 DateTime.now().millisecondsSinceEpoch - startUploadTimeStamp;
-            final uploadResult = TestResult(TestType.upload, transferRate, unit,
-                durationInMillis: uploadDuration);
+            final uploadResult = TestResult(
+              TestType.upload,
+              transferRate,
+              unit,
+              durationInMillis: uploadDuration,
+            );
 
             if (onProgress != null) onProgress(100, uploadResult);
             if (onUploadComplete != null) onUploadComplete(uploadResult);
@@ -156,6 +167,65 @@ class FlutterInternetSpeedTest {
       },
       fileSize: fileSizeInBytes,
       testServer: downloadTestServer,
+    );
+  }
+
+  /// ฟังก์ชัน startIOSTesting สำหรับ iOS โดยจะเพิ่มดีเลย์และปรับขนาดไฟล์ให้มากขึ้น
+  Future<void> startIOSTesting({
+    required ResultCallback onCompleted,
+    DefaultCallback? onStarted,
+    ResultCompletionCallback? onDownloadComplete,
+    ResultCompletionCallback? onUploadComplete,
+    TestProgressCallback? onProgress,
+    DefaultCallback? onDefaultServerSelectionInProgress,
+    DefaultServerSelectionCallback? onDefaultServerSelectionDone,
+    ErrorCallback? onError,
+    CancelCallback? onCancel,
+    String? downloadTestServer,
+    String? uploadTestServer,
+    int fileSizeInBytes = _defaultFileSize,
+    bool useFastApi = true,
+  }) async {
+    // ตรวจสอบว่าปัจจุบันเป็น iOS หรือไม่
+    if (!Platform.isIOS) {
+      // ถ้าไม่ใช่ iOS ให้เรียกใช้ฟังก์ชันปกติ
+      return startTesting(
+        onCompleted: onCompleted,
+        onStarted: onStarted,
+        onDownloadComplete: onDownloadComplete,
+        onUploadComplete: onUploadComplete,
+        onProgress: onProgress,
+        onDefaultServerSelectionInProgress: onDefaultServerSelectionInProgress,
+        onDefaultServerSelectionDone: onDefaultServerSelectionDone,
+        onError: onError,
+        onCancel: onCancel,
+        downloadTestServer: downloadTestServer,
+        uploadTestServer: uploadTestServer,
+        fileSizeInBytes: fileSizeInBytes,
+        useFastApi: useFastApi,
+      );
+    }
+
+    // สำหรับ iOS เราเพิ่มดีเลย์ 2 วินาทีก่อนเริ่มการทดสอบ
+    await Future.delayed(Duration(seconds: 2));
+
+    // เพิ่มขนาดไฟล์สำหรับ iOS เพื่อให้กระบวนการประมวลผลนานขึ้น (ตัวอย่างเพิ่มเป็น 2 เท่า)
+    int iosFileSize = fileSizeInBytes * 4;
+
+    return startTesting(
+      onCompleted: onCompleted,
+      onStarted: onStarted,
+      onDownloadComplete: onDownloadComplete,
+      onUploadComplete: onUploadComplete,
+      onProgress: onProgress,
+      onDefaultServerSelectionInProgress: onDefaultServerSelectionInProgress,
+      onDefaultServerSelectionDone: onDefaultServerSelectionDone,
+      onError: onError,
+      onCancel: onCancel,
+      downloadTestServer: downloadTestServer,
+      uploadTestServer: uploadTestServer,
+      fileSizeInBytes: iosFileSize,
+      useFastApi: useFastApi,
     );
   }
 
