@@ -18,12 +18,15 @@ class MethodChannelFlutterInternetSpeedTest
   final _logger = Logger();
 
   Future<void> _methodCallHandler(MethodCall call) async {
-    // Log arguments and callbacks for debugging
+    // Log arguments and callbacks for debugging with Thai messages
     if (isLogEnabled) {
-      _logger.d('Received method call: ${call.method}');
-      _logger.d('Arguments: ${call.arguments}');
-      _logger.d('Current callbacks: $callbacksById');
-      _logger.d('Timestamp: ${DateTime.now()}');
+      _logger.d(
+          'Received method call: ${call.method} (เรียกเมธอด: ${call.method})');
+      _logger
+          .d('Arguments: ${call.arguments} (อาร์กิวเมนต์: ${call.arguments})');
+      _logger.d(
+          'Current callbacks: $callbacksById (Callback ปัจจุบัน: $callbacksById)');
+      _logger.d('Timestamp: ${DateTime.now()} (เวลาที่รับ: ${DateTime.now()})');
     }
     switch (call.method) {
       case 'callListener':
@@ -39,7 +42,7 @@ class MethodChannelFlutterInternetSpeedTest
             SpeedUnit unit = SpeedUnit.mbps;
             if (isLogEnabled) {
               _logger.d(
-                  "Download COMPLETE: Raw transferRate: ${call.arguments['transferRate']} | Steps: $downloadSteps | Computed Average: $average $unit");
+                  "Download COMPLETE: Raw transferRate: ${call.arguments['transferRate']} | Steps: $downloadSteps | Computed Average: $average $unit (ดาวน์โหลดเสร็จ: อัตราการส่งข้อมูลดิบ: ${call.arguments['transferRate']}, จำนวนขั้นตอน: $downloadSteps, ค่าเฉลี่ย: $average $unit)");
             }
             callbacksById[call.arguments["id"]]!.item3(average, unit);
             downloadSteps = 0;
@@ -48,7 +51,7 @@ class MethodChannelFlutterInternetSpeedTest
           } else if (call.arguments['type'] == ListenerEnum.error.index) {
             if (isLogEnabled) {
               _logger.d(
-                  "Download ERROR: ${call.arguments['errorMessage']} | ${call.arguments['speedTestError']}");
+                  "Download ERROR: ${call.arguments['errorMessage']} | ${call.arguments['speedTestError']} (เกิดข้อผิดพลาดในการดาวน์โหลด: ${call.arguments['errorMessage']} | ${call.arguments['speedTestError']})");
             }
             callbacksById[call.arguments["id"]]!.item1(
                 call.arguments['errorMessage'],
@@ -66,13 +69,14 @@ class MethodChannelFlutterInternetSpeedTest
             double percent = call.arguments['percent'].toDouble();
             if (isLogEnabled) {
               _logger.d(
-                  "Download PROGRESS: $percent% | Raw Rate: $rawRate, Converted Rate: $convertedRate $unit");
+                  "Download PROGRESS: $percent% | Raw Rate: $rawRate, Converted Rate: $convertedRate $unit (ความคืบหน้าในการดาวน์โหลด: $percent%, อัตราการส่งข้อมูลดิบ: $rawRate, อัตราที่แปลงแล้ว: $convertedRate $unit)");
             }
             callbacksById[call.arguments["id"]]!
                 .item2(percent, convertedRate, unit);
           } else if (call.arguments['type'] == ListenerEnum.cancel.index) {
             if (isLogEnabled) {
-              _logger.d("Download CANCELLED for id: ${call.arguments['id']}");
+              _logger.d(
+                  "Download CANCELLED for id: ${call.arguments['id']} (การดาวน์โหลดถูกยกเลิกสำหรับ id: ${call.arguments['id']})");
             }
             callbacksById[call.arguments["id"]]!.item4();
             downloadSteps = 0;
@@ -90,7 +94,7 @@ class MethodChannelFlutterInternetSpeedTest
             SpeedUnit unit = SpeedUnit.mbps;
             if (isLogEnabled) {
               _logger.d(
-                  "Upload COMPLETE: Raw transferRate: ${call.arguments['transferRate']} | Steps: $uploadSteps | Computed Average: $average $unit");
+                  "Upload COMPLETE: Raw transferRate: ${call.arguments['transferRate']} | Steps: $uploadSteps | Computed Average: $average $unit (อัปโหลดเสร็จ: อัตราการส่งข้อมูลดิบ: ${call.arguments['transferRate']}, จำนวนขั้นตอน: $uploadSteps, ค่าเฉลี่ย: $average $unit)");
             }
             callbacksById[call.arguments["id"]]!.item3(average, unit);
             uploadSteps = 0;
@@ -99,7 +103,7 @@ class MethodChannelFlutterInternetSpeedTest
           } else if (call.arguments['type'] == ListenerEnum.error.index) {
             if (isLogEnabled) {
               _logger.d(
-                  "Upload ERROR: ${call.arguments['errorMessage']} | ${call.arguments['speedTestError']}");
+                  "Upload ERROR: ${call.arguments['errorMessage']} | ${call.arguments['speedTestError']} (เกิดข้อผิดพลาดในการอัปโหลด: ${call.arguments['errorMessage']} | ${call.arguments['speedTestError']})");
             }
             callbacksById[call.arguments["id"]]!.item1(
                 call.arguments['errorMessage'],
@@ -114,13 +118,14 @@ class MethodChannelFlutterInternetSpeedTest
             double percent = call.arguments['percent'].toDouble();
             if (isLogEnabled) {
               _logger.d(
-                  "Upload PROGRESS: $percent% | Raw Rate: $rawRate, Converted Rate: $convertedRate $unit");
+                  "Upload PROGRESS: $percent% | Raw Rate: $rawRate, Converted Rate: $convertedRate $unit (ความคืบหน้าในการอัปโหลด: $percent%, อัตราการส่งข้อมูลดิบ: $rawRate, อัตราที่แปลงแล้ว: $convertedRate $unit)");
             }
             callbacksById[call.arguments["id"]]!
                 .item2(percent, convertedRate, unit);
           } else if (call.arguments['type'] == ListenerEnum.cancel.index) {
             if (isLogEnabled) {
-              _logger.d("Upload CANCELLED for id: ${call.arguments['id']}");
+              _logger.d(
+                  "Upload CANCELLED for id: ${call.arguments['id']} (การอัปโหลดถูกยกเลิกสำหรับ id: ${call.arguments['id']})");
             }
             callbacksById[call.arguments["id"]]!.item4();
             uploadSteps = 0;
@@ -132,7 +137,7 @@ class MethodChannelFlutterInternetSpeedTest
       default:
         if (isLogEnabled) {
           _logger.d(
-              'Ignoring unknown method call: ${call.method} with arguments ${call.arguments}');
+              'Ignoring unknown method call: ${call.method} with arguments ${call.arguments} (ไม่รู้จักเมธอด: ${call.method} พร้อมอาร์กิวเมนต์: ${call.arguments})');
         }
     }
 
@@ -151,7 +156,7 @@ class MethodChannelFlutterInternetSpeedTest
     int currentListenerId = callbacksEnum.index;
     if (isLogEnabled) {
       _logger.d(
-          'Starting listening with id: $currentListenerId at ${DateTime.now()}');
+          'Starting listening with id: $currentListenerId at ${DateTime.now()} (เริ่มการฟังสำหรับ id: $currentListenerId เวลา: ${DateTime.now()})');
     }
     callbacksById[currentListenerId] = callback;
     await _channel.invokeMethod(
@@ -168,7 +173,7 @@ class MethodChannelFlutterInternetSpeedTest
       callbacksById.remove(currentListenerId);
       if (isLogEnabled) {
         _logger.d(
-            'Cancelled listening for id: $currentListenerId at ${DateTime.now()}');
+            'Cancelled listening for id: $currentListenerId at ${DateTime.now()} (ยกเลิกการฟังสำหรับ id: $currentListenerId เวลา: ${DateTime.now()})');
       }
     };
   }
@@ -192,7 +197,7 @@ class MethodChannelFlutterInternetSpeedTest
       required String testServer}) async {
     if (isLogEnabled) {
       _logger.d(
-          "Starting download test on server: $testServer with fileSize: $fileSize");
+          "Starting download test on server: $testServer with fileSize: $fileSize (เริ่มทดสอบดาวน์โหลดบนเซิร์ฟเวอร์: $testServer, ขนาดไฟล์: $fileSize)");
     }
     return await _startListening(Tuple4(onError, onProgress, onDone, onCancel),
         CallbacksEnum.startDownLoadTesting, testServer,
@@ -209,7 +214,7 @@ class MethodChannelFlutterInternetSpeedTest
       required String testServer}) async {
     if (isLogEnabled) {
       _logger.d(
-          "Starting upload test on server: $testServer with fileSize: $fileSize");
+          "Starting upload test on server: $testServer with fileSize: $fileSize (เริ่มทดสอบอัปโหลดบนเซิร์ฟเวอร์: $testServer, ขนาดไฟล์: $fileSize)");
     }
     return await _startListening(Tuple4(onError, onProgress, onDone, onCancel),
         CallbacksEnum.startUploadTesting, testServer,
@@ -240,7 +245,7 @@ class MethodChannelFlutterInternetSpeedTest
           if (serverSelectionResponse.targets?.isNotEmpty == true) {
             if (isLogEnabled) {
               _logger.d(
-                  "Default server found: ${serverSelectionResponse.targets!.first.url}");
+                  "Default server found: ${serverSelectionResponse.targets!.first.url} (เซิร์ฟเวอร์เริ่มต้นพบ: ${serverSelectionResponse.targets!.first.url})");
             }
             return serverSelectionResponse;
           }
@@ -248,7 +253,8 @@ class MethodChannelFlutterInternetSpeedTest
       }
     } catch (e) {
       if (logEnabled) {
-        _logger.d("Error in getDefaultServer: $e");
+        _logger.d(
+            "Error in getDefaultServer: $e (เกิดข้อผิดพลาดใน getDefaultServer: $e)");
       }
     }
     return null;
@@ -263,12 +269,14 @@ class MethodChannelFlutterInternetSpeedTest
         'id2': CallbacksEnum.startUploadTesting.index,
       });
       if (isLogEnabled) {
-        _logger.d("Test cancelled, result: $result");
+        _logger.d(
+            "Test cancelled, result: $result (ยกเลิกการทดสอบแล้ว, ผลลัพธ์: $result)");
       }
     } on PlatformException {
       result = false;
       if (isLogEnabled) {
-        _logger.d("PlatformException while cancelling test");
+        _logger.d(
+            "PlatformException while cancelling test (เกิด PlatformException ในการยกเลิกการทดสอบ)");
       }
     }
     return result;
