@@ -206,11 +206,11 @@ class FlutterInternetSpeedTest {
       );
     }
 
-    // สำหรับ iOS เราเพิ่มดีเลย์ 2 วินาทีก่อนเริ่มการทดสอบ
-    await Future.delayed(Duration(seconds: 2));
+    // สำหรับ iOS เพิ่มดีเลย์ 5 วินาที (ก่อนเริ่มการทดสอบ)
+    await Future.delayed(Duration(seconds: 5));
 
-    // เพิ่มขนาดไฟล์สำหรับ iOS เพื่อให้กระบวนการประมวลผลนานขึ้น (ตัวอย่างเพิ่มเป็น 2 เท่า)
-    int iosFileSize = fileSizeInBytes * 4;
+    // เพิ่มขนาดไฟล์สำหรับ iOS เพื่อให้การประมวลผลนานขึ้น (ในตัวอย่างเพิ่มเป็น 8 เท่า)
+    int iosFileSize = fileSizeInBytes * 8;
 
     return startTesting(
       onCompleted: onCompleted,
@@ -225,6 +225,65 @@ class FlutterInternetSpeedTest {
       downloadTestServer: downloadTestServer,
       uploadTestServer: uploadTestServer,
       fileSizeInBytes: iosFileSize,
+      useFastApi: useFastApi,
+    );
+  }
+
+  /// ฟังก์ชัน startAndroidTesting สำหรับ Android โดยจะเพิ่มดีเลย์และปรับขนาดไฟล์ให้มากขึ้น
+  Future<void> startAndroidTesting({
+    required ResultCallback onCompleted,
+    DefaultCallback? onStarted,
+    ResultCompletionCallback? onDownloadComplete,
+    ResultCompletionCallback? onUploadComplete,
+    TestProgressCallback? onProgress,
+    DefaultCallback? onDefaultServerSelectionInProgress,
+    DefaultServerSelectionCallback? onDefaultServerSelectionDone,
+    ErrorCallback? onError,
+    CancelCallback? onCancel,
+    String? downloadTestServer,
+    String? uploadTestServer,
+    int fileSizeInBytes = _defaultFileSize,
+    bool useFastApi = true,
+  }) async {
+    // ตรวจสอบว่าปัจจุบันเป็น Android หรือไม่
+    if (!Platform.isAndroid) {
+      // ถ้าไม่ใช่ Android ให้เรียกใช้ฟังก์ชันปกติ
+      return startTesting(
+        onCompleted: onCompleted,
+        onStarted: onStarted,
+        onDownloadComplete: onDownloadComplete,
+        onUploadComplete: onUploadComplete,
+        onProgress: onProgress,
+        onDefaultServerSelectionInProgress: onDefaultServerSelectionInProgress,
+        onDefaultServerSelectionDone: onDefaultServerSelectionDone,
+        onError: onError,
+        onCancel: onCancel,
+        downloadTestServer: downloadTestServer,
+        uploadTestServer: uploadTestServer,
+        fileSizeInBytes: fileSizeInBytes,
+        useFastApi: useFastApi,
+      );
+    }
+
+    // สำหรับ Android เพิ่มดีเลย์ 3 วินาที (ก่อนเริ่มการทดสอบ)
+    await Future.delayed(Duration(seconds: 3));
+
+    // ปรับขนาดไฟล์สำหรับ Android ให้มากขึ้น (ในตัวอย่างเพิ่มเป็น 3 เท่า)
+    int androidFileSize = fileSizeInBytes * 3;
+
+    return startTesting(
+      onCompleted: onCompleted,
+      onStarted: onStarted,
+      onDownloadComplete: onDownloadComplete,
+      onUploadComplete: onUploadComplete,
+      onProgress: onProgress,
+      onDefaultServerSelectionInProgress: onDefaultServerSelectionInProgress,
+      onDefaultServerSelectionDone: onDefaultServerSelectionDone,
+      onError: onError,
+      onCancel: onCancel,
+      downloadTestServer: downloadTestServer,
+      uploadTestServer: uploadTestServer,
+      fileSizeInBytes: androidFileSize,
       useFastApi: useFastApi,
     );
   }
